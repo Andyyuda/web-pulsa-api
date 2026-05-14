@@ -1,5 +1,5 @@
 kind = "api"
-previewPath = "/api" # TODO - should be excluded from preview in the first place
+previewPath = "/api"
 title = "API Server"
 version = "1.0.0"
 id = "3B4_FFSkEVBkAeYMFRJ2e"
@@ -9,10 +9,10 @@ localPort = 8080
 name = "API Server"
 paths = ["/api"]
 
-[services.development]
-run = "node --enable-source-maps /home/runner/workspace/artifacts/api-server/dist/index.mjs"
+[services.development.run]
+args = ["node", "/home/runner/workspace/artifacts/api-server/dist/index.mjs"]
 
-[services.development.env]
+[services.development.run.env]
 PORT = "8080"
 NODE_ENV = "development"
 

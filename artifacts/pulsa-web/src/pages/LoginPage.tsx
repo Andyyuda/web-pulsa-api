@@ -49,7 +49,7 @@ export default function LoginPage() {
 
   // Step 1: login
   const loginMut = useMutation({
-    mutationFn: () => loginPulsa({ data: { username: username.trim(), password: password.trim() } }),
+    mutationFn: () => loginPulsa({ username: username.trim(), password: password.trim() }),
     onSuccess: (data) => {
       const d = data as Record<string, unknown>;
       if (d.needOtp) {
