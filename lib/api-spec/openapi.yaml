@@ -1,0 +1,483 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification — Pulsa Web
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: products
+    description: Voucher product catalog
+  - name: transactions
+    description: Transaction history
+  - name: stats
+    description: Dashboard statistics
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Products ────────────────────────────────────────────────────────────
+  /pulsa/products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all voucher products
+      parameters:
+        - name: operator
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Add a new voucher product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /pulsa/products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a single product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Operators ───────────────────────────────────────────────────────────
+  /pulsa/operators:
+    get:
+      operationId: listOperators
+      tags: [products]
+      summary: List unique operators
+      responses:
+        "200":
+          description: Operator list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ─── Orders / Transactions ────────────────────────────────────────────────
+  /pulsa/transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions (admin)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /pulsa/transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get single transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+
+  /pulsa/order:
+    post:
+      operationId: placeOrder
+      tags: [transactions]
+      summary: Place a pulsa order (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── Balance ─────────────────────────────────────────────────────────────
+  /pulsa/login:
+    post:
+      operationId: loginPulsa
+      tags: [stats]
+      summary: Login ke isipulsa dan dapat token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: Login gagal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /pulsa/login/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [stats]
+      summary: Verifikasi OTP untuk login isipulsa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpInput"
+      responses:
+        "200":
+          description: Login berhasil setelah OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: OTP salah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /pulsa/balance:
+    get:
+      operationId: getBalance
+      tags: [stats]
+      summary: Get current isipulsa account balance
+      responses:
+        "200":
+          description: Balance info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceInfo"
+
+  # ─── Stats ────────────────────────────────────────────────────────────────
+  /pulsa/stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Dashboard summary stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    Product:
+      type: object
+      required: [id, code, voucherId, nama, harga, operator, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        voucherId:
+          type: string
+        nama:
+          type: string
+        harga:
+          type: integer
+        operator:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    ProductInput:
+      type: object
+      required: [code, voucherId, nama, harga, operator]
+      properties:
+        code:
+          type: string
+        voucherId:
+          type: string
+        nama:
+          type: string
+        harga:
+          type: integer
+        operator:
+          type: string
+        isActive:
+          type: boolean
+
+    ProductUpdate:
+      type: object
+      properties:
+        code:
+          type: string
+        voucherId:
+          type: string
+        nama:
+          type: string
+        harga:
+          type: integer
+        operator:
+          type: string
+        isActive:
+          type: boolean
+
+    Transaction:
+      type: object
+      required: [id, productCode, productName, target, harga, status, createdAt]
+      properties:
+        id:
+          type: integer
+        productCode:
+          type: string
+        productName:
+          type: string
+        target:
+          type: string
+        harga:
+          type: integer
+        status:
+          type: string
+        refId:
+          type: ["string", "null"]
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    OrderInput:
+      type: object
+      required: [productCode, target]
+      properties:
+        productCode:
+          type: string
+        target:
+          type: string
+          description: Phone number / nomor tujuan
+
+    BalanceInfo:
+      type: object
+      required: [balance]
+      properties:
+        balance:
+          type: ["integer", "null"]
+        username:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+
+    DashboardStats:
+      type: object
+      required: [totalProducts, totalTransactions, totalRevenue, successCount, failCount, pendingCount]
+      properties:
+        totalProducts:
+          type: integer
+        totalTransactions:
+          type: integer
+        totalRevenue:
+          type: integer
+        successCount:
+          type: integer
+        failCount:
+          type: integer
+        pendingCount:
+          type: integer
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+
+    LoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    VerifyOtpInput:
+      type: object
+      required: [username, password, otp]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        otp:
+          type: string
+
+    LoginResult:
+      type: object
+      required: [username, token]
+      properties:
+        username:
+          type: string
+        token:
+          type: string
+        balance:
+          type: ["integer", "null"]
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
